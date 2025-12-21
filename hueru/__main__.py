@@ -144,7 +144,7 @@ async def rgb(light_id, r, g, b):
                 x = X / (X + Y + Z)
                 y = Y / (X + Y + Z)
             
-            await bridge.lights.set_state(light_id, on=True, xy=[x, y])
+            await bridge.lights.set_state(light_id, on=True, color_xy=[x, y])
             print(f"Set light {light_id} to rgb({r},{g},{b})")
 
 if __name__ == "__main__":
