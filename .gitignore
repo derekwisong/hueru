@@ -1,0 +1,6 @@
+/secrets
+/.hueru.json
+/.vscode/
+__pycache__/
+*.egg-info
+.venv/

@@ -1,0 +1,25 @@
+[project]
+name = "hueru"
+version = "0.1.0"
+description = "My Philips Hue controller"
+authors = [
+    { name = "derek", email = "derek@example.com" },
+]
+dependencies = [
+    "click",
+    "aiohue",
+    "requests",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[tool.setuptools.packages.find]
+include = ["hueru"]
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest",
+]
