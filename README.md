@@ -1,26 +1,4 @@
-# Philips Hue
-
-- IP: `192.168.2.240`
-- ID: `ECB5FAFFFE1C8244`
-
-
-## Debug User
-
-Query: `POST /api {"devicetype": "hueru#derek", "generateclientkey": true}`
-
-Response:
-
-```json
-[
-	{
-		"success": {
-			"username": "T34WPbMLO400QY9JjF7iU1160ZnxYc0VHgdDnY8-",
-			"clientkey": "2FA722C079D1BE3ACA9ED87BC3F27281"
-		}
-	}
-]
-```
-
+# hueru
 
 ## Details
 
