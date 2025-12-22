@@ -147,5 +147,28 @@ async def rgb(light_id, r, g, b):
             await bridge.lights.set_state(light_id, on=True, color_xy=[x, y])
             print(f"Set light {light_id} to rgb({r},{g},{b})")
 
+@set.command()
+@click.argument('light_id', type=str)
+@async_command
+async def on(light_id):
+    """Turn a light on."""
+    async with aiohttp.ClientSession() as session:
+        bridge = await get_bridge(session)
+        if bridge:
+            await bridge.lights.set_state(light_id, on=True)
+            print(f"Turned light {light_id} on")
+
+@set.command()
+@click.argument('light_id', type=str)
+@async_command
+async def off(light_id):
+    """Turn a light off."""
+    async with aiohttp.ClientSession() as session:
+        bridge = await get_bridge(session)
+        if bridge:
+            await bridge.lights.set_state(light_id, on=False)
+            print(f"Turned light {light_id} off")
+
+
 if __name__ == "__main__":
     main()
