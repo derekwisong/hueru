@@ -9,9 +9,9 @@ dependencies = [
     "click",
     "aiohue",
     "requests",
-    "gobject",
-    "pygobject",
+    "PyGObject",
     "numpy",
+    "dbus-python",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
