@@ -13,9 +13,12 @@ class ScreenScanner:
         self.height = height
         self.latest_frame = None
         
-        # Optimized pipeline
+        # Optimized pipeline.
+        # We set media.role=Screen to hint to PipeWire that we want to capture a
+        # screen. This should trigger the desktop portal to ask the user for
+        # which screen/window to share.
         pipeline_str = (
-            f"pipewiresrc ! videoconvert ! videoscale ! "
+            f"pipewiresrc stream-properties=\"properties,media.role=Screen\" ! videoconvert ! videoscale ! videoconvert ! "
             f"video/x-raw,format=RGB,width={width},height={height} ! "
             f"appsink name=sink emit-signals=True max-buffers=1 drop=True"
         )
@@ -41,6 +44,12 @@ class ScreenScanner:
                 err, debug = msg.parse_error()
                 raise RuntimeError(f"GStreamer Error: {err.message}")
             raise RuntimeError("Pipeline failed to play. Check if xdg-desktop-portal is running.")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def _on_new_sample(self, sink):
         """Callback for when a new frame is ready."""
@@ -72,11 +81,12 @@ class ScreenScanner:
 # Test usage
 if __name__ == "__main__":
     import time
-    scanner = ScreenScanner()
-    try:
-        while True:
-            color = scanner.get_region_color(0.4, 0.4, 0.6, 0.6) # Center 20%
-            print(f"\rCenter Color: {color}   ", end="")
-            time.sleep(0.01)
-    except KeyboardInterrupt:
-        scanner.close()
+
+    with ScreenScanner() as scanner:
+        try:
+            while True:
+                color = scanner.get_region_color(0.4, 0.4, 0.6, 0.6)  # Center 20%
+                print(f"\rCenter Color: {color}   ", end="")
+                time.sleep(0.01)
+        except KeyboardInterrupt:
+            print("\nExiting.")

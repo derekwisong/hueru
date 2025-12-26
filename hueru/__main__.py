@@ -32,6 +32,7 @@ from aiohue import LinkButtonNotPressed, create_app_key
 from aiohue.discovery import discover_nupnp
 from aiohue.v2 import HueBridgeV2
 
+from hueru.colors import rgb_to_xy
 from hueru.screen import ScreenScanner
 
 CONFIG_FILE = Path.home() / ".hueru.json"
@@ -234,29 +235,7 @@ def rgb(ctx, light_id, r, g, b):
 
     async def command(ctx):
         bridge = ctx.obj["bridge"]
-        # aiohue uses xy, so we need to convert from RGB.
-        # This conversion logic is a standard approximation.
-        r_norm = r / 255.0
-        g_norm = g / 255.0
-        b_norm = b / 255.0
-
-        # Apply gamma correction
-        r_final = pow(r_norm, 2.2) if r_norm > 0.04045 else r_norm / 12.92
-        g_final = pow(g_norm, 2.2) if g_norm > 0.04045 else g_norm / 12.92
-        b_final = pow(b_norm, 2.2) if b_norm > 0.04045 else b_norm / 12.92
-
-        # Convert to XYZ
-        X = r_final * 0.649926 + g_final * 0.103455 + b_final * 0.197109
-        Y = r_final * 0.234327 + g_final * 0.743075 + b_final * 0.022598
-        Z = r_final * 0.000000 + g_final * 0.053077 + b_final * 1.035763
-
-        # Convert to xy
-        if (X + Y + Z) == 0:
-            x, y = 0.0, 0.0
-        else:
-            x = X / (X + Y + Z)
-            y = Y / (X + Y + Z)
-
+        x, y = rgb_to_xy(r, g, b)
         await bridge.lights.set_state(light_id, on=True, color_xy=[x, y])
         print(f"Set light {light_id} to rgb({r},{g},{b})")
 
@@ -276,35 +255,17 @@ def bottom(ctx, light_id):
 
     async def command(ctx):
         bridge = ctx.obj["bridge"]
-        scanner = ScreenScanner()
-
-        while True:
-            r, g, b = scanner.get_region_color(0, 0.75, 1, 1)
-            # Convert to xy
-            r_norm = r / 255.0
-            g_norm = g / 255.0
-            b_norm = b / 255.0
-
-            # Apply gamma correction
-            r_final = pow(r_norm, 2.2) if r_norm > 0.04045 else r_norm / 12.92
-            g_final = pow(g_norm, 2.2) if g_norm > 0.04045 else g_norm / 12.92
-            b_final = pow(b_norm, 2.2) if b_norm > 0.04045 else b_norm / 12.92
-
-            # Convert to XYZ
-            X = r_final * 0.649926 + g_final * 0.103455 + b_final * 0.197109
-            Y = r_final * 0.234327 + g_final * 0.743075 + b_final * 0.022598
-            Z = r_final * 0.000000 + g_final * 0.053077 + b_final * 1.035763
-
-            # Convert to xy
-            if (X + Y + Z) == 0:
-                x, y = 0.0, 0.0
-            else:
-                x = X / (X + Y + Z)
-                y = Y / (X + Y + Z)
-
-            await bridge.lights.set_state(light_id, on=True, color_xy=[x, y])
-            print(f"Set light {light_id} to rgb({r},{g},{b})")
-            await asyncio.sleep(0.1)  # prevent busy-looping
+        try:
+            with ScreenScanner() as scanner:
+                while True:
+                    r, g, b = scanner.get_region_color(0, 0.75, 1, 1)
+                    x, y = rgb_to_xy(r, g, b)
+                    await bridge.lights.set_state(light_id, on=True, color_xy=[x, y])
+                    print(f"Set light {light_id} to rgb({r},{g},{b})")
+                    await asyncio.sleep(0.1)  # prevent busy-looping
+        except RuntimeError as e:
+            print(f"Error during screen capture: {e}", file=sys.stderr)
+            sys.exit(1)
 
     asyncio.run(run_command(ctx, command))
 
