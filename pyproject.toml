@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "hueru"
 version = "0.1.0"
@@ -12,6 +16,8 @@ dependencies = [
     "PyGObject",
     "numpy",
     "dbus-python",
+    # GStreamer and GLib are typically installed via a system package manager,
+    # not pip, so they are omitted from this list.
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
@@ -26,6 +32,7 @@ distribution = false
 hueru = "python -m hueru.__main__"
 
 [tool.pdm.dev-dependencies]
+[project.optional-dependencies]
 dev = [
     "pytest",
 ]

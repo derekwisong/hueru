@@ -18,7 +18,9 @@ class ScreenScanner:
         # screen. This should trigger the desktop portal to ask the user for
         # which screen/window to share.
         pipeline_str = (
-            f"pipewiresrc stream-properties=\"properties,media.role=Screen\" ! videoconvert ! videoscale ! videoconvert ! "
+            f"pipewiresrc stream-properties=\"properties,media.role=Screen\" ! "
+            f"queue ! videoconvert ! video/x-raw ! "
+            f"videoscale ! videoconvert ! "
             f"video/x-raw,format=RGB,width={width},height={height} ! "
             f"appsink name=sink emit-signals=True max-buffers=1 drop=True"
         )
@@ -42,7 +44,13 @@ class ScreenScanner:
             msg = bus.timed_pop_filtered(Gst.SECOND, Gst.MessageType.ERROR)
             if msg:
                 err, debug = msg.parse_error()
-                raise RuntimeError(f"GStreamer Error: {err.message}")
+                if "target not found" in err.message:
+                    raise RuntimeError(
+                        "GStreamer Error: 'target not found'. This commonly means the screen selection dialog "
+                        "failed or was canceled. Please ensure you are running in a graphical desktop session and that "
+                        "the 'xdg-desktop-portal' service is running correctly."
+                    )
+                raise RuntimeError(f"GStreamer Error: {err.message} ({debug})")
             raise RuntimeError("Pipeline failed to play. Check if xdg-desktop-portal is running.")
 
     def __enter__(self):
